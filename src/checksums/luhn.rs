@@ -1,4 +1,4 @@
-use crate::checksums::{Checksum, Result, Error::{IncorrectChecksumError, InsufficientMessageError, InvalidMessageError}};
+use crate::checksums::{Checksum, Result, ChecksumError::{IncorrectChecksumError, InsufficientMessageError, InvalidMessageError}};
 
 pub struct Luhn {}
 
@@ -37,7 +37,7 @@ impl Checksum for Luhn {
         };
 
         if actual_checksum != expected_checksum {
-            return Err(IncorrectChecksumError(actual_checksum.to_string(), expected_checksum.to_string()));
+            return Err(IncorrectChecksumError{got: actual_checksum.to_string(), wanted: expected_checksum.to_string()});
         }
 
         Ok(payload.to_owned())
@@ -101,11 +101,11 @@ mod tests {
     fn test_validate() {
         let checksum = Luhn{};
         assert_eq!(checksum.validate("123455"), Ok("12345".to_owned()));
-        assert_eq!(checksum.validate("123456"), Err(IncorrectChecksumError("6".to_owned(), "5".to_owned())));
+        assert_eq!(checksum.validate("123456"), Err(IncorrectChecksumError{got: "6".to_owned(), wanted: "5".to_owned()}));
         assert_eq!(checksum.validate("10009"), Ok("1000".to_owned()));
-        assert_eq!(checksum.validate("10000"), Err(IncorrectChecksumError("0".to_owned(), "9".to_owned())));
+        assert_eq!(checksum.validate("10000"), Err(IncorrectChecksumError{got: "0".to_owned(), wanted: "9".to_owned()}));
         assert_eq!(checksum.validate("79927398713"), Ok("7992739871".to_owned()));
-        assert_eq!(checksum.validate("79927398715"), Err(IncorrectChecksumError("5".to_owned(), "3".to_owned())));
+        assert_eq!(checksum.validate("79927398715"), Err(IncorrectChecksumError{got: "5".to_owned(), wanted: "3".to_owned()}));
         assert_eq!(checksum.validate(""), Err(InsufficientMessageError("".to_owned())));
         assert_eq!(checksum.validate("foo"), Err(InvalidMessageError("foo".to_owned())));
         assert_eq!(checksum.validate("👍"), Err(InvalidMessageError("👍".to_owned())));

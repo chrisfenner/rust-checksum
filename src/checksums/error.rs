@@ -1,22 +1,16 @@
-use std::{error, fmt};
+use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, ChecksumError>;
 
-#[derive(Debug, PartialEq)]
-pub enum Error {
+#[derive(Error, Debug, PartialEq)]
+pub enum ChecksumError {
+    #[error("'{0}' was not a valid message for this checksum")]
     InvalidMessageError(String),
-    IncorrectChecksumError(String, String),
+    #[error("checksum value '{got}' was not correct; expected '{wanted}'")]
+    IncorrectChecksumError {
+        got: String,
+        wanted: String,
+    },
+    #[error("'{0}' did not contain enough data to be a checksummed message")]
     InsufficientMessageError(String),
-}
-
-impl error::Error for Error {}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Error::InvalidMessageError(msg) => write!(f, "'{msg}' was not a valid message for this checksum"),
-            Error::IncorrectChecksumError(got, wanted) => write!(f, "checksum value '{got}' was not correct; expected '{wanted}'"),
-            Error::InsufficientMessageError(msg) => write!(f, "'{msg}' did not contain enough data to be a checksummed message"),
-        }
-    }
 }
